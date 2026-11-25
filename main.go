@@ -341,6 +341,26 @@ func setupHotSpot(monitor gdk.Monitor, dockWindow *gtk.Window) gtk.Window {
 
 func main() {
 	flag.Parse()
+	if *intellihideIPC != "" {
+		*resident = true
+		*autohide = false
+		if *targetOutput == "" {
+			log.Fatal("intellihide: select an output with -o")
+		}
+	}
+	if *nativeManager {
+		if err := runNativeManager(); err != nil {
+			log.Fatal(err)
+		}
+		return
+	}
+	if *nativeChild {
+		if *targetOutput == "" || *position != "left" || *full || *exclusive || *layer != "overlay" || *intellihideIPC != "" {
+			log.Fatal("native child requires left overlay, output, no external IPC")
+		}
+		*resident = true
+		*autohide = false
+	}
 	if *debug {
 		log.SetLevel(log.DebugLevel)
 	}
@@ -620,6 +640,22 @@ func main() {
 		}
 	}()
 
+	if *nativeChild {
+		monitor := output2mon[*targetOutput]
+		if monitor == nil {
+			log.Fatal("native dock: monitor not found")
+		}
+		if err := startNativeDock(win, monitor); err != nil {
+			log.Fatal(err)
+		}
+	}
+	if *intellihideIPC != "" {
+		monitor := output2mon[*targetOutput]
+		if monitor == nil {
+			log.Fatalf("intellihide: output %s not found", *targetOutput)
+		}
+		startIntellihide(win, monitor)
+	}
 	win.ShowAll()
 
 	if *autohide {

@@ -157,3 +157,8 @@ Copyright (c) 2015-2018 gotk3 contributors
 - [gotk3-layershell](https://github.com/dlasky/gotk3-layershell) by [@dlasky](https://github.com/dlasky/gotk3-layershell/commits?author=dlasky) - many thanks for writing this software, and for patience with my requests!
 - [go-sway](https://github.com/joshuarubin/go-sway) Copyright (c) 2019 Joshua Rubin
 - [go-singleinstance](github.com/allan-simon/go-singleinstance) Copyright (c) 2015 Allan Simon
+
+## Native Intellihide and status panel (fork)
+
+See [native mode documentation](README.native.md) for multi-monitor setup,
+configuration examples and build instructions.

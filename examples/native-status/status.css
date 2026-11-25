@@ -1,0 +1,31 @@
+#nwg-status { background-color: #242426; border: none; border-radius: 0; }
+#nwg-status #status-box { padding: 3px 0; }
+#nwg-status button { min-width: 0; min-height: 0; padding: 3px 0; margin: 0; background: transparent; border: none; box-shadow: none; }
+#nwg-status button label { font-family: "DejaVu Sans", "FontAwesome"; font-size: 12px; }
+#nwg-status button:hover { background-color: #343437; }
+
+/* Native status: independent icon and text sizes */
+#nwg-status button label {
+    font-family: "DejaVu Sans", "FontAwesome";
+    font-size: 12px;
+}
+#nwg-status #status-expanded button label {
+    font-family: "FontAwesome", "DejaVu Sans";
+    font-size: 16px;
+}
+#nwg-status #status-expanded button {
+    padding: 5px 0;
+}
+#nwg-status #status-toggle label {
+    font-family: "FontAwesome";
+    font-size: 18px;
+}
+
+/* Native status: no hover background */
+#nwg-status button:hover,
+#nwg-status button:active {
+    background-color: transparent;
+    background-image: none;
+    box-shadow: none;
+    border-color: transparent;
+}

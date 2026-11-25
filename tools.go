@@ -804,41 +804,45 @@ func getExec(appName string) (string, error) {
 	if strings.HasPrefix(strings.ToUpper(appName), "GIMP") {
 		cmd = "gimp"
 	}
+
+	// Stage 1: prefer exact desktop basenames across ALL configured app dirs.
+	// In particular, ~/.local/share/applications must not trigger a fuzzy
+	// match before /usr/share/applications/<app_id>.desktop is checked.
+	path := ""
 	for _, d := range appDirs {
-		files, _ := os.ReadDir(d)
-		path := ""
-		for _, f := range files {
-			if strings.HasSuffix(f.Name(), ".desktop") {
-				if f.Name() == fmt.Sprintf("%s.desktop", appName) ||
-					f.Name() == fmt.Sprintf("%s.desktop", strings.ToLower(appName)) {
-					path = filepath.Join(d, f.Name())
-					break
-				}
+		for _, desktopName := range []string{appName + ".desktop", strings.ToLower(appName) + ".desktop"} {
+			candidate := filepath.Join(d, desktopName)
+			info, err := os.Stat(candidate)
+			if err == nil && !info.IsDir() {
+				path = candidate
+				break
 			}
 		}
-
-		// as above in getIcon - for tasks w/ improper app_id
-		if path == "" {
-			path = searchDesktopDirs(appName)
-		}
-
 		if path != "" {
-			lines, err := loadTextFile(path)
-			if err != nil {
-				return "", err
-			}
-			for _, line := range lines {
-				if strings.HasPrefix(strings.ToUpper(line), "EXEC") {
-					l := line[5:]
-					cutAt := strings.Index(l, "%")
-					if cutAt != -1 {
-						l = l[:cutAt-1]
-					}
-					cmd = l
-					break
+			break
+		}
+	}
+
+	// Stage 2: only if no exact basename exists anywhere, try the upstream
+	// heuristic for applications whose app_id differs from the desktop name.
+	if path == "" {
+		path = searchDesktopDirs(appName)
+	}
+	if path != "" {
+		lines, err := loadTextFile(path)
+		if err != nil {
+			return "", err
+		}
+		for _, line := range lines {
+			if strings.HasPrefix(strings.ToUpper(line), "EXEC") {
+				l := line[5:]
+				cutAt := strings.Index(l, "%")
+				if cutAt != -1 {
+					l = l[:cutAt-1]
 				}
+				cmd = l
+				break
 			}
-			return cmd, nil
 		}
 	}
 	return cmd, nil
