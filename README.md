@@ -1,164 +1,139 @@
 # nwg-dock
 
-This application is a part of the [nwg-shell](https://nwg-piotr.github.io/nwg-shell) project.
+A native GTK3 dock for the Sway Wayland compositor, written in Go.
 
-**Contributing:** please read the [general contributing rules for the nwg-shell project](https://nwg-piotr.github.io/nwg-shell/contribution).
+Based on [nwg-dock](https://github.com/nwg-piotr/nwg-dock),
+extended with native Intellihide, multi-monitor support,
+an integrated status panel and drag-hover window activation.
 
-For **Hyprland support** please use [nwg-dock-hyprland](https://github.com/nwg-piotr/nwg-dock-hyprland).
+## Features
 
-Fully configurable (w/ command line arguments and css) dock, written in Go, aimed exclusively at [sway](https://github.com/swaywm/sway) Wayland compositor. It features pinned buttons, task buttons, the workspace switcher and the launcher button. The latter by default starts [nwg-drawer](https://github.com/nwg-piotr/nwg-drawer) or `nwggrid` (application grid) - if found. In the picture(s) below the dock has been shown together with [nwg-panel](https://github.com/nwg-piotr/nwg-panel).
+- Left-centered application dock.
+- Pinned applications and running window indicators.
+- Native multi-monitor management.
+- Independent Intellihide for each output.
+- Window overlap detection through Sway IPC.
+- Automatic edge reveal.
+- Optional expandable bottom-left status panel.
+- Drag-hover activation of running applications.
+- GTK3 CSS customization.
+- No external dock controller required.
+- Original nwg-dock mode retained for compatibility.
 
-<img src="https://raw.githubusercontent.com/nwg-piotr/nwg-shell-resources/master/images/nwg-dock/dock-1.png" width=640 alt="Screenshot">
+## Drag and drop
 
-[![Packaging status](https://repology.org/badge/vertical-allrepos/nwg-dock.svg)](https://repology.org/project/nwg-dock/versions)
+Drag a file onto the icon of a running application and
+hold it there for 400 ms.
+
+The dock activates the corresponding window and switches
+to its workspace without interrupting the drag operation.
+
+The dock also reveals itself during dragging when hidden
+by Intellihide.
+
+Files are dropped directly into the destination application,
+not onto the dock itself.
+
+## Dependencies
+
+Runtime:
+
+- Sway
+- GTK3
+- gtk-layer-shell
+- FontAwesome (for the status panel expansion arrow)
+
+Build:
+
+- Go 1.23 or newer
+- C compiler
+- pkg-config
+- GTK3 development libraries
+- gtk-layer-shell development libraries
+
+## Build
+
+On Debian:
+
+```sh
+sudo apt install --no-install-recommends \
+    golang-go pkg-config libgtk-3-dev libgtk-layer-shell-dev
+
+git clone https://github.com/sabx-ru/nwg-dock.git
+cd nwg-dock
+
+go test native_core.go native_core_test.go
+make build
+```
+
+If Wayland libraries come from Debian Backports,
+install matching development packages.
 
 ## Installation
 
-### Requirements
+```sh
+sudo make install
+```
 
-- `go`>=1.20 (just to build)
-- `gtk3`
-- `gtk-layer-shell`
-- [nwg-drawer](https://github.com/nwg-piotr/nwg-drawer) or
-[nwg-launchers](https://github.com/nwg-piotr/nwg-launchers): optionally. You may use another launcher (see help),
-or none at all. The launcher button won't show up, if so.
+## Usage
 
-### Steps
+Start the native manager:
 
-1. Clone the repository, cd into it.
-2. Install golang libraries with `make get`. First time it may take ages, be patient.
-3. `make build`
-4. `sudo make install`
+```sh
+nwg-dock -native-manager
+```
 
-## Running
-
-Either start the dock permanently in the sway config file,
+Sway autostart:
 
 ```text
-exec nwg-dock [arguments]
+exec nwg-dock -native-manager
 ```
 
-or assign the command to some key binding. Running the command again kills the existing program instance, so that
-you could use the same key to open and close the dock.
+Debug mode:
 
-## Running the dock residently
+```sh
+nwg-dock -native-manager -debug
+```
 
-If you run the program with the `-d` or `-r` argument (preferably in autostart), it will be running residently.
+For all command-line options:
+
+```sh
+nwg-dock -h
+```
+
+## Configuration
+
+User configuration directory:
 
 ```text
-exec_always nwg-dock -d
+~/.config/nwg-dock/
 ```
 
-or
+- `style.css` — application dock appearance.
+- `status.json` — optional status panel configuration.
+- `status.css` — status panel appearance.
 
-```text
-exec_always nwg-dock -r
-```
+Status panel configuration examples are available in
+`examples/native-status/`.
 
-### `-d` for autohiDe
+The status panel supports configurable rows, expandable
+items, update intervals, click handlers and i3blocks-style
+command output.
 
-Move the mouse pointer to expected dock location for the dock to show up. It will be hidden a second after you leave the window. Invisible hot spots will be created on all your outputs, unless you specify one with the `-o` argument.
+Without a status configuration, only the application
+dock is displayed.
 
-### `-r` for just Resident
+## Limitations
 
-No hotspot will be created. To show/hide the dock, bind the `exec nwg-dock` command to some key or button.
-How about the `Menu` key, which is usually useless?
+Native mode currently uses a left-centered application
+dock and a bottom-left status panel.
 
-Re-execution of the same command hides the dock. If a resident instance found, the `nwg-dock` command w/o
-arguments sends `SIGUSR1` to it. Actually `pkill -USR1 nwg-dock` could be used instead. This also works in autohiDe
-mode.
+Drag cancellation and file acceptance depend on the
+compositor and the participating applications.
 
-Re-execution of the command with the `-d` or `-r` argument won't kill the running instance. If the dock is
-running residently, another instance will just exit with 0 code. In case you'd like to terminate it anyway, you need to `pkill -f nwg-dock`.
+## License
 
-*NOTE: you need to kill the running instance before reloading sway, if you've just changed the arguments you
-auto-start the dock with.*
+MIT.
 
-```txt
-$ nwg-dock -h
-Usage of nwg-dock:
-  -a string
-    	Alignment in full width/height: "start", "center" or "end" (default "center")
-  -c string
-    	Command assigned to the launcher button
-  -d	auto-hiDe: show dock when hotspot hovered, close when left or a button clicked
-  -debug
-    	turn on debug messages
-  -f	take Full screen width/height
-  -g string
-    	quote-delimited, space-separated app_id list to iGnore in the dock
-  -hd int
-    	Hotspot Delay [ms]; the smaller, the faster mouse pointer needs to enter hotspot for the dock to appear; set 0 to disable (default 20)
-  -i int
-    	Icon size (default 48)
-  -l string
-    	Layer "overlay", "top" or "bottom" (default "overlay")
-  -lp string
-    	Launcher button position, 'start' or 'end' (default "end")
-  -mb int
-    	Margin Bottom
-  -ml int
-    	Margin Left
-  -mr int
-    	Margin Right
-  -mt int
-    	Margin Top
-  -nolauncher
-    	don't show the launcher button
-  -nows
-    	don't show the workspace switcher
-  -o string
-    	name of Output to display the dock on
-  -p string
-    	Position: "bottom", "top" or "left" (default "bottom")
-  -r	Leave the program resident, but w/o hotspot
-  -s string
-    	Styling: css file name (default "style.css")
-  -v	display Version information
-  -w int
-    	number of Workspaces you use (default 8)
-  -x	set eXclusive zone: move other windows aside; overrides the "-l" argument
-```
-
-<img src="https://raw.githubusercontent.com/nwg-piotr/nwg-shell-resources/master/images/nwg-dock/dock-2.png" width=640 alt="Screenshot"><br>
-
-## Styling
-
-Edit `~/.config/nwg-dock/style.css` to your taste.
-
-## Troubleshooting
-
-### An application icon is not displayed
-
-The only thing the dock knows about the app is it's app_id.
-
-```text
-$ swaymsg -t get_tree
-(...)
-        #13: con "piotr@msi:~" (xdg_shell, pid: 8512, app_id: "foot")
-```
-
-Now it'll look for an icon named 'foot'. If that fails, it'll look for a .desktop file named 'foot.desktop', which should contain the icon name or path. If this fails as well, no icon will be displayed. I've added workarounds for some most common exceptions, but it's impossible to predict every single application misbehaviour. This is either programmers fault (improper class name), or bad packaging (.desktop file name different from the application class name).
-
-If some app has no icon in the dock:
-
-1. check the app class name (`swaymsg -t get_tree`);
-2. find the app's .desktop file;
-3. copy it to ~/.local/share/applications/` and rename to <class_name>.desktop.
-
-If the .desktop file contains proper icon definition (`Icon=`), it should work now.
-
-## Credits
-
-This program uses some great libraries:
-
-- [gotk3](https://github.com/gotk3/gotk3) Copyright (c) 2013-2014 Conformal Systems LLC,
-Copyright (c) 2015-2018 gotk3 contributors
-- [gotk3-layershell](https://github.com/dlasky/gotk3-layershell) by [@dlasky](https://github.com/dlasky/gotk3-layershell/commits?author=dlasky) - many thanks for writing this software, and for patience with my requests!
-- [go-sway](https://github.com/joshuarubin/go-sway) Copyright (c) 2019 Joshua Rubin
-- [go-singleinstance](github.com/allan-simon/go-singleinstance) Copyright (c) 2015 Allan Simon
-
-## Native Intellihide and status panel (fork)
-
-See [native mode documentation](README.native.md) for multi-monitor setup,
-configuration examples and build instructions.
+Original project by nwg-piotr.
+Native extensions maintained by sabx-ru.

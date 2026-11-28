@@ -600,7 +600,10 @@ func main() {
 
 	refreshMainBox := func(currentTasks []task, forceRefresh bool) {
 		if forceRefresh || (len(currentTasks) != len(oldTasks) || currentWsNum != oldWsNum) {
-			glib.TimeoutAdd(0, func() bool {
+			glib.TimeoutAdd(100, func() bool {
+				if *nativeChild && dockDragHolding() {
+					return true
+				}
 				log.Debug("refreshing...")
 				buildMainBox(currentTasks, alignmentBox)
 				oldTasks = currentTasks

@@ -379,6 +379,13 @@ func taskButton(t task, instances []task) *gtk.Box {
 	box, _ := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0)
 	button, _ := gtk.ButtonNew()
 	box.PackStart(button, false, false, 0)
+	if *nativeChild {
+		ids := make([]int64, 0, len(instances))
+		for _, instance := range instances {
+			ids = append(ids, instance.conID)
+		}
+		registerDockDrag(box, ids, nil)
+	}
 
 	image, err := createImage(t.ID, imgSizeScaled)
 	if err != nil {

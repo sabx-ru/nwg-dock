@@ -168,6 +168,8 @@ func newNativeSurface(win *gtk.Window, monitor *gdk.Monitor, bottom bool, margin
 	// used by status. In particular, a top-level NONLINEAR_VIRTUAL leave is
 	// a genuine subtree exit, not an internal crossing between buttons.
 	if !bottom {
+		registerDockDrag(box, nil, func() { s.apply() })
+		registerDockDrag(win, nil, nil)
 		win.AddEvents(int(gdk.POINTER_MOTION_MASK | gdk.ENTER_NOTIFY_MASK | gdk.LEAVE_NOTIFY_MASK))
 		win.Connect("enter-notify-event", func(_ *gtk.Window, event *gdk.Event) bool {
 			accepted := nativeStatusPointerEvent(win, event) == 1
@@ -220,7 +222,7 @@ func (s *nativeSurface) geometry() {
 	}
 }
 func (s *nativeSurface) apply() {
-	visible := s.state.Visible || (s.status != nil && s.status.expansion.holds(time.Now()))
+	visible := s.state.Visible || (s.status != nil && s.status.expansion.holds(time.Now())) || (!s.bottom && dockDragHolding())
 	s.traceState(s.win.IsVisible(), visible)
 	if visible && !s.win.IsVisible() {
 		nativeTrace("panel=%s SHOW", s.traceName())
